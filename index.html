@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4A2FA0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Neuraxis">
+<title>Neuraxis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&family=Sora:wght@600;700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}body{margin:0}
+/* Layout: findings checklist on the left in examination order, sticky result panel on the right; stacked on phones.
+   Palette: Nubicor deep purple, lilac, coral on a lilac-tinted ground. */
+:root{
+  --bg:#F5F2FC; --panel:#FFFFFF; --ink:#1D1545; --mute:#675F8E; --line:#E2DCF3;
+  --primary:#4A2FA0; --on-primary:#FFFFFF; --lilac:#D9CEFA; --chip:#EFEAFB;
+  --coral:#E9533C; --coral-soft:#FDE7E2; --ok:#1B7F61; --ok-soft:#DDF3EA; --warn-soft:#FFF1D6; --warn:#8A5A00;
+  --f-display:"Sora","Segoe UI",system-ui,sans-serif; --f-body:"Figtree","Segoe UI",system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#100B27; --panel:#1A1340; --ink:#F0EBFF; --mute:#A59DCB; --line:#2E2562;
+  --primary:#B7A2FF; --on-primary:#17103A; --lilac:#3A2D7A; --chip:#251C54;
+  --coral:#FF7C67; --coral-soft:#3D2030; --ok:#5FD3A8; --ok-soft:#14352F; --warn-soft:#3A2D12; --warn:#F2C26B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#100B27; --panel:#1A1340; --ink:#F0EBFF; --mute:#A59DCB; --line:#2E2562;
+  --primary:#B7A2FF; --on-primary:#17103A; --lilac:#3A2D7A; --chip:#251C54;
+  --coral:#FF7C67; --coral-soft:#3D2030; --ok:#5FD3A8; --ok-soft:#14352F; --warn-soft:#3A2D12; --warn:#F2C26B; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:0 84px}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px;padding:18px 0 14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand svg{flex:none}
+h1{font-family:var(--f-display);font-size:28px;line-height:1;margin:0;letter-spacing:-.02em}
+.tag{color:var(--mute);font-size:13px;margin-top:3px}
+.tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.age{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.age label{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.age input{width:64px;border:0;background:transparent;font-family:var(--f-mono);font-size:18px;text-align:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--primary)}
+.btn.pri{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+.examples{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-bottom:14px;font-size:13px;color:var(--mute)}
+.examples .btn{padding:5px 10px;font-weight:500}
+.banner{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:14px}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,430px);gap:20px;align-items:start}
+.inputs{display:flex;flex-direction:column;gap:10px;min-width:0}
+details.grp{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+details.grp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;font-family:var(--f-display);font-size:15px;font-weight:600}
+details.grp>summary::-webkit-details-marker{display:none}
+details.grp>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(45deg);transition:transform .15s}
+details.grp[open]>summary::after{transform:rotate(-135deg)}
+.cnt{font-family:var(--f-mono);font-size:12px;background:var(--primary);color:var(--on-primary);border-radius:99px;padding:1px 8px}
+.cnt:empty{display:none}
+.sub{font-size:12px;color:var(--mute);margin-left:4px;font-family:var(--f-body);font-weight:400}
+.chips{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}
+.chip{border:1px solid var(--line);background:var(--chip);border-radius:99px;padding:6px 12px;cursor:pointer;font-size:13.5px;text-align:left}
+.chip:hover{border-color:var(--primary)}
+.chip[aria-pressed="true"]{background:var(--primary);color:var(--on-primary);border-color:var(--primary);font-weight:600}
+.addrow{display:flex;gap:8px;padding:0 14px 8px}
+.addrow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
+.note{padding:0 14px 14px;color:var(--mute);font-size:12.5px}
+.result{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;display:flex;flex-direction:column;gap:14px;min-width:0;padding-right:2px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card h2{font-family:var(--f-display);font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:0 0 10px}
+.site{font-family:var(--f-display);font-size:22px;line-height:1.15;margin:0}
+.site small{display:block;font-family:var(--f-body);font-size:13px;color:var(--mute);margin-top:4px;font-weight:400}
+.flags{display:flex;flex-direction:column;gap:6px}
+.flag{background:var(--coral-soft);color:var(--coral);border-radius:10px;padding:8px 10px;font-size:13px;font-weight:600}
+.bar{display:grid;grid-template-columns:128px minmax(0,1fr) 30px;gap:8px;align-items:center;font-size:12.5px;padding:2px 0}
+.bar .t{height:8px;border-radius:9px;background:var(--chip);overflow:hidden}
+.bar .t i{display:block;height:100%;background:var(--lilac);border-radius:9px}
+.bar.top .t i{background:var(--coral)}
+.bar.top .l{font-weight:700}
+.bar .v{font-family:var(--f-mono);color:var(--mute);text-align:right}
+.dx{border-top:1px solid var(--line);padding:12px 0 0;margin-top:12px}
+.dx:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.dxh{display:flex;gap:10px;align-items:flex-start}
+.rank{flex:none;width:26px;height:26px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-family:var(--f-mono);font-size:13px}
+.dx.first .rank{background:var(--coral);color:#fff}
+.dxn{font-weight:700;font-size:15.5px;line-height:1.25}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pill{font-size:11.5px;border-radius:99px;padding:1px 8px;background:var(--chip);color:var(--mute)}
+.pill.u{background:var(--coral-soft);color:var(--coral);font-weight:700}
+.pill.s{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.why{font-size:13.5px;margin:6px 0 0;color:var(--ink)}
+.mt{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.mt span{font-size:11.5px;border-radius:6px;padding:2px 7px;background:var(--ok-soft);color:var(--ok)}
+.mt span.x{background:var(--coral-soft);color:var(--coral)}
+.first-move{font-size:13px;margin-top:7px;color:var(--mute)}
+.first-move b{color:var(--ink)}
+ol.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;font-size:14px}
+ol.steps li::before{content:counter(s);width:26px;height:26px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-family:var(--f-mono);font-size:13px}
+.steps-for{font-size:12.5px;color:var(--mute);margin:-4px 0 10px}
+.small{font-size:12px;color:var(--mute)}
+.empty{color:var(--mute);font-size:14px;padding:6px 0}
+.mobbar{display:none}
+@media (max-width:980px){
+  main{grid-template-columns:minmax(0,1fr)}
+  .result{position:static;max-height:none;overflow:visible}
+  .mobbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;gap:10px;align-items:center;justify-content:space-between;background:var(--primary);color:var(--on-primary);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));font-weight:600}
+  .mobbar a{color:inherit}
+  .tools{margin-left:0}
+}
+@media (max-width:480px){.bar{grid-template-columns:104px minmax(0,1fr) 26px}h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">
+    <svg width="46" height="46" viewBox="0 0 48 48" role="img" aria-label="Nubicor cloud with pulse line">
+      <path d="M13 36a9 9 0 0 1-1.5-17.9A12 12 0 0 1 34.6 15 9.5 9.5 0 0 1 36 36z" fill="var(--primary)"/>
+      <polyline points="9,27 17,27 20,20 25,34 29,24 32,27 40,27" fill="none" stroke="var(--coral)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div><h1>Neuraxis</h1><div class="tag">Weakness localisation for the ED · by Nubicor</div></div>
+  </div>
+  <div class="tools">
+    <div class="age"><label for="age">Age</label><input id="age" type="number" min="0" max="110" inputmode="numeric" value="32" aria-label="Patient age in years"></div>
+    <button class="btn" id="copy" type="button">Copy summary</button>
+    <button class="btn" id="clear" type="button">Clear all</button>
+    <button class="btn" id="theme" type="button" aria-label="Toggle light and dark">Theme</button>
+  </div>
+</header>
+<div class="examples"><span>Example cases:</span><span id="exbtns"></span></div>
+<div class="banner" id="banner">Example case loaded so you can see the output. Press Clear all to start a new patient.</div>
+<main>
+  <section class="inputs" id="inputs" aria-label="Findings"></section>
+  <aside class="result" id="results" aria-live="polite"></aside>
+</main>
+</div>
+<div class="mobbar"><span id="mobcount">0 findings</span><a href="#results">See result ↓</a></div>
+
+<script>
+/* ---------- Findings (examination order) ---------- */
+const G=[
+{k:"pat",t:"Weakness pattern",s:"pick one",single:1,open:1,items:[
+["pHemiFace","Arm + leg + face, one side"],["pHemiSpare","Arm + leg, one side (face spared)"],["pFaceArm","Face + arm, one side"],["pCrossed","Face one side, limbs other side"],
+["pPara","Both legs"],["pQuad","All four limbs"],["pLegMono","One leg alone"],["pArmMono","One arm alone"],["pFace","Face alone"],
+["pProx","Proximal, symmetric (shoulders, hips)"],["pDist","Distal, symmetric (hands, feet)"],["pAscend","Ascending, legs then arms"],
+["pBulbar","Eyes, bulbar or neck predominant, limbs spare"],["pFocal","Single nerve or root (foot drop, wrist drop)"],["pNone","No true weakness, clumsy or unsteady"]]},
+{k:"typ",t:"Type of palsy",s:"pick one",single:1,open:1,items:[
+["tUMN","UMN (spastic, brisk, Babinski)"],["tLMN","LMN (flaccid, wasted, reflexes down)"],["tMixed","Mixed UMN + LMN"],["tUnsure","Acute flaccid, cannot tell yet"]]},
+{k:"ons",t:"Onset",s:"pick one",single:1,open:1,items:[
+["hSudden","Seconds to minutes"],["hHours","Hours"],["hDays","Days"],["hWeeks","Weeks"],["hYears","Months to years"]]},
+{k:"men",t:"Mental status and higher function",none:"mNormal",open:1,items:[
+["mNormal","Alert, oriented, higher functions normal"],["mDrowsy","Drowsy or reduced GCS"],["mConf","Confused or delirious"],["mAphasia","Aphasia"],["mNeglect","Neglect"],
+["mGaze","Gaze deviation (towards lesion)"],["mField","Visual field cut"],["mFrontal","Abulia, disinhibition, executive loss"],["mMemory","Memory loss"],["mApraxia","Apraxia, agnosia, Gerstmann"],["mSeizure","Seizure at onset"]]},
+{k:"cn",t:"Bulbar and cranial nerves",items:[
+["cDysphagia","Dysphagia"],["cDysarthria","Dysarthria"],["cNasal","Nasal voice or nasal regurgitation"],["cCough","Weak cough or breathless"],["cTongueWaste","Tongue wasting or fasciculation"],
+["cTongueDev","Tongue deviation"],["cPalate","Palate weak or absent gag"],["cJaw","Jaw weakness"],["cPtosisFat","Fatigable ptosis (60 s upgaze)"],["cPtosis","Ptosis, fixed"],
+["cOphth","Diplopia or ophthalmoplegia"],["cINO","Internuclear ophthalmoplegia"],["cPupil","Pupil abnormal (dilated, fixed, pinpoint)"],["cHorner","Horner's syndrome"],
+["cFaceUMN","Face weak, forehead spared (UMN)"],["cFaceLMN","Face weak, forehead involved (LMN)"],["cFaceBilat","Bilateral facial weakness"],["cFaceSens","Facial numbness"],
+["cVert","Vertigo"],["cHearing","Hearing loss or tinnitus"],["cVision","Visual loss or painful eye movement"],["cNeck","Neck weak or head drop"],["cShrug","Shoulder shrug or SCM weak"]]},
+{k:"mot",t:"Motor",s:"tone, power, bulk",items:[
+["moSpastic","Spastic tone (clasp-knife)"],["moRigid","Rigid tone (lead-pipe, cogwheel)"],["moFlaccid","Flaccid tone"],["moTremor","Resting tremor"],["moFatig","Power fades with repeated effort"],
+["moFasc","Fasciculations"],["moWaste","Muscle wasting"],["moMyotonia","Delayed relaxation (myotonia)"],["moMyalgia","Muscle pain or tenderness"],["moCramps","Cramps"],["moPronator","Pronator drift"],
+["oFunctional","Hoover sign, give-way or inconsistent power"]]},
+{k:"sen",t:"Sensory",none:"sNone",items:[
+["sNone","No sensory loss"],["sLevel","Sensory level on trunk"],["sHemi","Hemisensory loss"],["sGlove","Glove and stocking loss"],["sDissoc","Pain and temperature lost, vibration kept"],
+["sPC","Vibration and joint position lost (posterior column)"],["sCrude","Light or crude touch loss"],["sPressure","Deep pressure loss"],["sSaddle","Saddle anaesthesia"],["sDermatomal","Dermatomal loss"],
+["sNerve","Single nerve territory loss"],["sCrossedFace","Face one side, body other side (pain, temp)"],["sBrown","Weak and vibration lost one side, pain and temp lost other"],
+["sPain","Radicular or neuropathic pain"],["sPara","Tingling or paraesthesia"],["sLhermitte","Lhermitte's sign"],["sBand","Band-like trunk pain"],["sCortical","Cortical sensory loss (graphaesthesia, stereognosis)"]]},
+{k:"rd",t:"Deep reflexes",items:[
+["rHyper","Brisk"],["rHypo","Reduced"],["rAbsent","Absent, generalised"],["rClonus","Clonus"],["rHoffmann","Hoffmann positive"],["rInverted","Inverted supinator"],
+["rMixedArmLeg","Arm reflexes down, leg reflexes up"],["rAnkleAbsOnly","Ankle jerk absent only"],["rJawBrisk","Jaw jerk brisk"]]},
+{k:"rs",t:"Superficial and frontal reflexes",items:[
+["rBabinski","Babinski extensor"],["rAbdAbs","Abdominal or cremasteric absent"],["rAnalAbs","Anal wink or bulbocavernosus absent"],["rFrontalRel","Grasp, palmomental or snout"]]},
+{k:"gait",t:"Gait and stance",items:[
+["gSpastic","Spastic, scissoring"],["gCircum","Hemiparetic circumduction"],["gSteppage","Foot drop, steppage"],["gWaddle","Waddling, Trendelenburg"],["gAtaxic","Wide-based, drunken"],
+["gSensory","Stomping, worse in the dark"],["gParkinson","Shuffling, small steps"],["gFreezing","Freezing, festination"],["gMagnetic","Magnetic, feet stuck (apraxic)"],["gUnable","Cannot stand or walk"],
+["gProxRise","Cannot rise from chair or climb stairs (Gowers)"],["gHeelFail","Cannot heel-walk"],["gToeFail","Cannot toe-walk"],["gTandem","Tandem walking fails"],["gRomberg","Romberg positive"],["gAntalgic","Antalgic, pain-avoiding"]]},
+{k:"cb",t:"Cerebellar and coordination",items:[
+["cbDysmetria","Finger-nose dysmetria"],["cbDysdiad","Dysdiadochokinesia"],["cbIntention","Intention tremor"],["cbHeelShin","Heel-shin ataxia"],["cbNyst","Nystagmus"],
+["cbScanning","Scanning speech"],["cbTruncal","Truncal ataxia"],["cbRebound","Rebound present"],["cbTitubation","Head titubation"]]},
+{k:"aut",t:"Bladder, bowel, autonomic",items:[
+["aRetention","Urinary retention"],["aIncont","Urinary incontinence"],["aBowel","Faecal incontinence or lax anal tone"],["aOrtho","Postural hypotension or labile BP"],
+["aDry","Dry mouth, constipation, dilated pupils"],["aCholin","Salivation, sweating, slow pulse, pinpoint pupils"]]},
+{k:"his",t:"History and risk factors",items:[
+["hThunder","Thunderclap headache or vomiting"],["hHeadache","Headache"],["hFever","Fever"],["hNeckPain","Neck pain"],["hBackPain","Back pain"],["hTrauma","Recent trauma"],
+["hNeckManip","Neck manipulation or strain"],["hAF","AF, valve disease or recent MI"],["hHTN","Hypertension"],["hDM","Diabetes"],["hVasc","Smoker or high cholesterol"],["hAnticoag","On anticoagulant"],
+["hInfection","Infection or diarrhoea in past 4 weeks"],["hVomDiarr","Vomiting, diarrhoea, diuretics or laxatives"],["hCarbLoad","Episodes after rest, exertion or a heavy carbohydrate meal"],
+["hRecurrent","Similar episodes before, fully recovered"],["hFluct","Worse in the evening or with use, better with rest"],["hFam","Family history"],["hAlcohol","Heavy alcohol"],
+["hMyotoxic","Statin, steroid or colchicine"],["hThyroid","Thyroid symptoms"],["hSnake","Snake bite or slept on the floor"],["hTick","Tick exposure"],["hFood","Home-canned food, honey or injecting drugs"],
+["hOP","Pesticide or organophosphate exposure"],["hCancer","Known cancer, weight loss or smoker"],["hTBHIV","TB, HIV or immunosuppressed"],["hPregnant","Pregnant or postpartum"],["hMigraine","Migraine history"],
+["hSeizureHx","Epilepsy"],["hEpisodic","Earlier neurological episodes (relapsing)"],["hVaccine","Recent vaccine or viral illness"],["hLifting","Heavy lifting or straining"],
+["hB12","B12 risk: vegan, anaemia, nitrous oxide"],["hRheum","Autoimmune or rheumatological disease"],["hPsych","Major stressor or psychiatric history"]]},
+{k:"bed",t:"Bedside results",s:"if available",items:[
+["bGlucoseLow","Glucose low"],["bKLow","K⁺ low"],["bKHigh","K⁺ high"],["bECGU","ECG U waves or flat T"],["bCKHigh","CK high"],["bCTBleed","CT: haemorrhage"],["bCTHypo","CT or MRI: infarct"],
+["bFVCLow","FVC low or NIF weak"],["bMRICord","MRI: cord or root lesion"],["bLPProt","CSF: high protein, normal cells"]]}
+];
+const L={};G.forEach(g=>g.items.forEach(i=>L[i[0]]=i[1]));
+const SING={};G.filter(g=>g.single).forEach(g=>SING[g.k]=g.items.map(i=>i[0]));
+const ONSET=SING.ons, PAT=SING.pat, TYP=SING.typ;
+
+/* ---------- Conditions ---------- */
+const S="Cortex / subcortex",CAP="Internal capsule",BS="Brainstem",CB="Cerebellum",CO="Spinal cord",RT="Root / cauda equina",NV="Nerve / plexus",MN="Motor neuron",NM="Neuromuscular junction",MU="Muscle",SY="Systemic / metabolic",DF="Diffuse brain";
+const LEVELS=[S,CAP,BS,CB,CO,RT,NV,MN,NM,MU,SY,DF];
+const D=[
+{n:"MCA-territory ischaemic stroke",lv:S,r:"c",u:1,ag:[[0,35,-2],[55,120,1]],f:"pHemiFace:3 pFaceArm:3 pArmMono:1 tUMN:2 tUnsure:1 mAphasia:3 mNeglect:3 mGaze:3 mField:2 hSudden:3 hHours:1 hAF:2 hHTN:1 hVasc:1 hDM:1 sHemi:1 cFaceUMN:2 mSeizure:.5 mDrowsy:1 bCTHypo:2 sCortical:1 mApraxia:1 hFever:-1 sLevel:-3 bGlucoseLow:-3 rAbsent:-1 cbDysmetria:-1",
+ why:"Sudden one-sided face, arm and leg weakness with a cortical sign (language, neglect, gaze or field) points to the MCA territory.",
+ st:["Stroke code: note last-known-well, check glucose, NIHSS, then non-contrast CT brain with CT angiogram now.","If within 4.5 h and no contraindication: IV alteplase 0.9 mg/kg (max 90 mg) or tenecteplase 0.25 mg/kg (max 25 mg). Keep BP below 185/110 before and 180/105 after.","Large-vessel occlusion: thrombectomy (up to 24 h on perfusion imaging). Then swallow screen, ECG for AF, antiplatelet after the 24 h scan if lysed."]},
+{n:"Intracerebral haemorrhage",lv:S,r:"c",u:1,ag:[[0,30,-1],[55,120,1]],f:"pHemiFace:2 pHemiSpare:2 pFaceArm:1 tUMN:2 tUnsure:1 hSudden:2 hHours:1 hThunder:2 hHeadache:2 mDrowsy:2 hHTN:2 hAnticoag:3 bCTBleed:6 mGaze:1 hTrauma:.5 mSeizure:1 bCTHypo:-2 hYears:-3 sLevel:-3",
+ why:"Abrupt deficit with headache, vomiting, drowsiness, high BP or anticoagulants. CT settles it in minutes.",
+ st:["Non-contrast CT brain immediately. Do not give lytics or antiplatelets until haemorrhage is excluded.","Lower systolic BP to about 140 mmHg (IV labetalol or nicardipine). Reverse anticoagulation: vitamin K plus PCC for warfarin, idarucizumab for dabigatran, andexanet or PCC for Xa inhibitors.","Head up 30°, protect the airway, neurosurgical review for cerebellar, large or hydrocephalic bleeds. CT angiogram if young or lobar."]},
+{n:"Lacunar infarct (internal capsule or pons)",lv:CAP,r:"c",u:1,ag:[[0,35,-2],[50,120,1]],f:"pHemiFace:3 pHemiSpare:2 pFaceArm:2 tUMN:2 sNone:3 mNormal:3 cFaceUMN:2 cDysarthria:1 hHTN:2 hDM:2 hVasc:1 hSudden:1 hHours:2 hDays:1 mAphasia:-3 mNeglect:-3 mField:-3 mGaze:-2 mDrowsy:-1 sHemi:0",
+ why:"Pure motor hemiparesis with face, arm and leg equally weak and no cortical signs, in a hypertensive or diabetic patient.",
+ st:["Treat as stroke: glucose, NIHSS, CT, and MRI diffusion if CT is clear. Lysis still applies if the deficit is disabling.","Dual antiplatelet (aspirin plus clopidogrel for 21 days) for minor stroke or high-risk TIA after haemorrhage is excluded.","Vascular work-up: carotid imaging, ECG, echo, lipids and HbA1c. Start statin and tighten BP and glucose control."]},
+{n:"Brainstem stroke with crossed signs (Weber, Millard-Gubler, Dejerine)",lv:BS,r:"u",u:1,ag:[[0,35,-2],[50,120,1]],f:"pCrossed:4 tUMN:1 cOphth:2 cFaceLMN:2 cTongueDev:3 cDysarthria:1 cDysphagia:1 sPC:1 hSudden:3 hHours:1 hVasc:1 hHTN:1 hDM:1 mDrowsy:.5 cbNyst:1 mAphasia:-3 mNeglect:-2 hYears:-3",
+ why:"Cranial nerve palsy on one side with weakness on the other. Midbrain gives CN III, pons gives CN VII, medulla gives CN XII.",
+ st:["Stroke code with MRI diffusion and CT angiogram of head and neck. CT often misses posterior fossa infarcts.","Basilar occlusion is thrombectomy-eligible and can progress fast. Watch GCS, airway and swallowing, and keep NPO.","Lysis if within window and eligible. Check for vertebral dissection if neck pain or manipulation."]},
+{n:"Lateral medullary syndrome (Wallenberg)",lv:BS,r:"u",u:1,ag:[[0,35,-1],[45,120,1]],f:"sCrossedFace:5 cDysphagia:3 cHorner:3 cbNyst:2 cVert:2 cbDysmetria:2 gAtaxic:2 cPalate:2 cDysarthria:1 sDissoc:1 hSudden:2 hHours:1 pBulbar:2 pNone:2 hNeckManip:2 rHyper:-1 mAphasia:-2 tUMN:-1",
+ why:"Ipsilateral face and contralateral body pain and temperature loss, Horner's, dysphagia, vertigo and ataxia, with limbs spared.",
+ st:["MRI diffusion and CT or MR angiogram of head and neck, looking for vertebral dissection.","NPO until a formal swallow assessment. Antiemetic for vertigo. Aspiration is the main early killer.","Stroke pathway including lysis if eligible. Anticoagulation or antiplatelet choice for dissection with neurology."]},
+{n:"Cerebellar infarct or haemorrhage",lv:CB,r:"c",u:1,ag:[[0,30,-1],[50,120,1]],f:"cbDysmetria:3 cbTruncal:3 gAtaxic:3 cVert:3 cbNyst:3 cbDysdiad:2 cbHeelShin:1 gUnable:2 pNone:2 hSudden:2 hHours:2 hHeadache:1 mDrowsy:1 hHTN:1 hVasc:1 gTandem:1 pHemiFace:-1 sLevel:-3 rHyper:-1",
+ why:"Acute vertigo with a truncal or gait ataxia, nystagmus and dysmetria. Weakness is usually absent.",
+ st:["Urgent MRI diffusion (CT misses early posterior fossa infarcts). If continuous vertigo, do HINTS: a central pattern means stroke.","Watch GCS for hydrocephalus or brainstem compression in the first 3 days. Head up, avoid sedation.","Neurosurgery early for large cerebellar infarcts or haemorrhage (decompression or EVD). Then stroke secondary prevention."]},
+{n:"ACA-territory infarct",lv:S,r:"u",u:1,ag:[[0,35,-2],[55,120,1]],f:"pLegMono:4 pPara:1 tUMN:2 mFrontal:3 aIncont:2 rFrontalRel:2 hSudden:3 hHours:1 hAF:1 hHTN:1 sCortical:1 cFaceUMN:-1 mAphasia:-1 gSpastic:1",
+ why:"Leg much weaker than arm with abulia and urinary incontinence suggests the anterior cerebral artery.",
+ st:["Stroke code: glucose, NIHSS, CT with CT angiogram.","Lysis or thrombectomy if eligible (distal occlusion is less often treatable).","ECG and echo for embolic source, swallow screen, DVT prophylaxis with early mobilisation."]},
+{n:"Cerebral venous thrombosis",lv:S,r:"r",u:1,ag:[[0,45,2],[65,120,-1]],f:"hHeadache:2 mSeizure:3 hPregnant:3 hDays:2 hWeeks:1 hHours:1 mDrowsy:1 mConf:1 pLegMono:1 pPara:1 pHemiSpare:1 pHemiFace:1 tUMN:1 hFever:.5 hSudden:-1 sLevel:-3",
+ why:"Headache, seizures and fluctuating bilateral or hemispheric signs in pregnancy, postpartum or a prothrombotic state.",
+ st:["CT venogram or MR venogram (non-contrast CT is often normal).","Start LMWH even if there is haemorrhagic infarction. Anti-seizure drug if seizures.","Treat raised ICP, look for thrombophilia, OCP, infection, and decide on endovascular therapy if deteriorating."]},
+{n:"Todd's paresis after a seizure",lv:S,r:"u",u:0,ag:[],f:"mSeizure:4 hSeizureHx:2 hRecurrent:1 pHemiFace:1 pHemiSpare:1 pArmMono:1 pLegMono:1 tUMN:1 hSudden:1 hHours:1 hWeeks:-2 hYears:-2",
+ why:"Transient weakness after a witnessed seizure that improves over hours. A diagnosis of exclusion when stroke is possible.",
+ st:["Glucose, electrolytes, ECG. If a stroke cannot be ruled out, treat as stroke and image (CT or MRI).","Check for the cause of the seizure: structural lesion, infection, drugs, alcohol withdrawal, antiepileptic non-adherence.","Anti-seizure treatment per cause, EEG if prolonged confusion, observe until recovered."]},
+{n:"Hypoglycaemia",lv:SY,r:"c",u:1,ag:[],f:"bGlucoseLow:7 mConf:2 mDrowsy:2 hDM:2 hSudden:1 hHours:1 pHemiFace:1 pHemiSpare:1 tUMN:.5 mSeizure:1",
+ why:"Any focal deficit with low glucose is hypoglycaemia until corrected.",
+ st:["Treat now: 50 mL of 25% to 50% dextrose IV (2 mL/kg of 25% in a child), or IM glucagon if no access.","Recheck glucose at 15 minutes. The deficit should reverse within minutes to an hour.","Find the cause: insulin or sulfonylurea, alcohol, sepsis, adrenal or liver failure. If the deficit persists, image for stroke."]},
+{n:"Hypokalaemic paralysis (periodic or secondary)",lv:SY,r:"c",u:1,ag:[[0,12,-2],[15,45,1],[65,120,-1]],f:"pProx:3 pQuad:3 pPara:2 pAscend:2 pBulbar:1 tLMN:3 rHypo:3 rAbsent:2 sNone:4 mNormal:3 bKLow:7 bECGU:3 hVomDiarr:3 hCarbLoad:3 hRecurrent:2 hThyroid:2 hFam:1 hHours:2 hDays:1 hSudden:1 cNeck:2 gProxRise:1 gUnable:1 moCramps:1 cDysphagia:-2 cOphth:-3 sGlove:-3 sLevel:-4 rHyper:-3 rBabinski:-3 aRetention:-3 moFasc:-1",
+ why:"Acute symmetric flaccid weakness, areflexia and normal sensation and mentation with low K⁺, often after diarrhoea, a carbohydrate meal or in thyrotoxicosis.",
+ st:["ECG monitor, K⁺, Mg²⁺ and venous or arterial gas. Watch FVC and swallow; ventilation can fail.","IV KCl 10 to 20 mmol/h in saline (not dextrose), up to 40 mmol/h via central line with monitoring. Replace Mg²⁺ first or together. In periodic paralysis use the lower rate and recheck often to avoid rebound.","Find the cause: urine K⁺ and Cl⁻, TSH (thyrotoxic: propranolol), RTA, Gitelman, licorice, DKA, diuretics. Look for dropped head, bulbar weakness, arrhythmia."]},
+{n:"Hyperkalaemic or paramyotonic periodic paralysis",lv:SY,r:"r",u:1,ag:[[10,45,1]],f:"bKHigh:6 hFam:2 hRecurrent:2 hCarbLoad:2 pProx:2 pQuad:2 tLMN:2 rHypo:2 moMyotonia:3 sNone:2 hHours:1 sLevel:-3",
+ why:"Episodic flaccid attacks after rest following exercise, with high K⁺ and myotonia.",
+ st:["ECG and K⁺ now. Calcium gluconate 10% 10 mL IV if ECG changes.","Salbutamol nebulised and insulin with dextrose to shift K⁺. Look for renal failure, drugs and adrenal insufficiency.","Mild attacks: carbohydrate intake and light exercise. Refer for genetics and acetazolamide prophylaxis."]},
+{n:"Guillain-Barré syndrome",lv:NV,r:"c",u:1,ag:[],f:"pAscend:3 pQuad:2 pPara:2 pDist:1 tLMN:3 tUnsure:1 rAbsent:3 rHypo:2 hInfection:3 hDays:3 hWeeks:1 sPara:2 sPain:1 cFaceBilat:3 cFaceLMN:1 cDysphagia:1 cCough:2 aOrtho:2 bFVCLow:3 bLPProt:4 mNormal:1 gUnable:1 sLevel:-3 rHyper:-3 rBabinski:-2 bKLow:-4 hSudden:-3 hYears:-3 hFluct:-2 cPtosisFat:-2 hSnake:-1 aRetention:-1",
+ why:"Ascending symmetric weakness with areflexia, paraesthesia and a recent infection. Face, bulbar and breathing can follow.",
+ st:["Airway and breathing first: FVC and NIF 4-hourly, 20-30-40 rule (FVC below 20 mL/kg, NIF weaker than -30, MEP below 40). Cardiac monitor for autonomic instability.","IVIg 0.4 g/kg/day for 5 days, or plasma exchange (4 to 6 sessions). No steroids. Avoid succinylcholine.","Exclude mimics: K⁺, CK, MRI spine if there is a sensory level, LP (high protein, normal cells), NCS. Analgesia, DVT prophylaxis."]},
+{n:"Myasthenia gravis",lv:NM,r:"c",u:1,ag:[[15,40,.5],[60,120,.5]],f:"cPtosisFat:5 cOphth:3 hFluct:4 moFatig:4 cDysphagia:2 cDysarthria:1 cNasal:2 cNeck:2 pBulbar:3 pProx:2 pQuad:1 tLMN:1 sNone:3 mNormal:1 cCough:1 bFVCLow:1 hDays:1 hWeeks:2 hYears:1 hRheum:.5 rAbsent:-2 rHyper:-2 sLevel:-3 cPupil:-3 moFasc:-1 rBabinski:-3 sGlove:-2 aDry:-1 hSnake:-1",
+ why:"Fatigable weakness of eyes, bulbar muscles and neck or proximal limbs, worse late in the day, with normal sensation, reflexes and pupils.",
+ st:["Check breathing: FVC, NIF, single-breath count, cough and swallow. Intubate on the 20-30-40 rule. Avoid aminoglycosides, fluoroquinolones, macrolides, magnesium and β-blockers.","Bedside ice-pack or rest test, AChR and MuSK antibodies, repetitive nerve stimulation or SFEMG, CT chest for thymoma.","Crisis: ICU with IVIg 2 g/kg over 2 to 5 days or plasma exchange. Stable: pyridostigmine 30 to 60 mg 3 to 4 times daily; steroids only after IVIg or PLEX cover."]},
+{n:"Lambert-Eaton myasthenic syndrome",lv:NM,r:"r",u:0,ag:[[40,120,1]],f:"aDry:3 rHypo:3 rAbsent:2 pProx:3 hCancer:3 cPtosis:1 sNone:1 gProxRise:2 hWeeks:2 hYears:1 moFatig:0 cDysphagia:1 rBabinski:-3 sLevel:-3",
+ why:"Proximal leg weakness with dry mouth and areflexia in a smoker. Power may briefly improve after exertion.",
+ st:["Look for post-exercise facilitation and reflex return after sustained contraction.","Anti-VGCC antibodies, repetitive nerve stimulation at high rate, CT chest.","Search for small-cell lung cancer. Treat with 3,4-diaminopyridine and treat the tumour."]},
+{n:"Botulism",lv:NM,r:"r",u:1,ag:[],f:"cOphth:3 cPtosis:2 cPupil:3 aDry:3 cDysphagia:3 cDysarthria:2 pBulbar:3 pQuad:2 pAscend:1 tLMN:2 hFood:4 hDays:2 hHours:1 cCough:2 sNone:3 mNormal:2 rHypo:1 bFVCLow:1 sLevel:-3 rHyper:-3 hFluct:-1 hYears:-3 hFever:-1",
+ why:"Descending paralysis starting with eyes and bulbar muscles, with dilated pupils and dry mouth after contaminated food or injection.",
+ st:["Airway and ventilation first; progression to respiratory failure can be fast. ICU monitoring.","Give antitoxin as early as possible on clinical suspicion; do not wait for confirmation. Notify public health.","Send stool, serum and food for toxin assay. Avoid aminoglycosides. Wound debridement if wound botulism."]},
+{n:"Neurotoxic snake envenomation (krait, cobra)",lv:NM,r:"u",u:1,ag:[],f:"hSnake:5 cPtosis:3 cOphth:3 cDysphagia:2 pBulbar:2 pQuad:2 tLMN:2 hHours:3 hDays:1 cPupil:1 bFVCLow:1 cCough:1 sNone:2 mNormal:1 rHyper:-3 sLevel:-3 hYears:-3",
+ why:"Ptosis and bulbar palsy within hours of a bite, often while sleeping on the floor, with a mild or invisible bite mark.",
+ st:["Airway, breathing and FVC checks. Intubate early; weakness can progress to respiratory arrest.","Polyvalent anti-snake venom promptly (about 10 vials, repeat if no response) and a neostigmine test with atropine cover. Do the 20-minute whole-blood clotting test.","Ventilate until recovery, monitor for rhabdomyolysis and AKI, and observe at least 24 hours after a bite."]},
+{n:"Organophosphate poisoning",lv:NM,r:"u",u:1,ag:[],f:"hOP:5 aCholin:4 moFasc:3 cPupil:2 cDysphagia:1 pQuad:2 pProx:1 tLMN:2 hHours:3 hDays:1 cCough:1 mDrowsy:1 mConf:1 rHyper:-3 sLevel:-3",
+ why:"Pesticide exposure with cholinergic features and fasciculations, followed by weakness (intermediate syndrome) at 1 to 4 days.",
+ st:["Decontaminate, secure the airway, oxygen. Avoid succinylcholine.","Atropine 1 to 3 mg IV doubled every 5 minutes until the chest is dry, heart rate above 80 and pupils not pinpoint. Pralidoxime per protocol.","Ventilate for respiratory weakness, benzodiazepines for seizures, watch for intermediate syndrome and QT prolongation."]},
+{n:"Tick paralysis",lv:NM,r:"r",u:1,ag:[[0,10,1]],f:"hTick:5 pAscend:3 pQuad:2 tLMN:3 rAbsent:3 sNone:2 cOphth:1 gAtaxic:1 hDays:2 hHours:1 mNormal:1 sLevel:-3 rHyper:-3",
+ why:"Rapid ascending flaccid weakness that mimics GBS but with a tick attached, usually behind the ears or hairline.",
+ st:["Search the whole body, scalp and skin folds, and remove the tick whole.","Support breathing; recovery often begins within hours of removal.","Still treat as GBS if there is no improvement or no tick is found."]},
+{n:"Inflammatory myopathy (polymyositis, dermatomyositis)",lv:MU,r:"u",u:0,ag:[[30,80,1]],f:"pProx:4 tLMN:1 cNeck:2 cDysphagia:1 moMyalgia:3 bCKHigh:4 sNone:3 hWeeks:3 hYears:1 hMyotoxic:1 hRheum:1 gProxRise:3 gWaddle:2 sGlove:-3 moFasc:-2 rHyper:-3 hSudden:-3 moFatig:-1",
+ why:"Painless or mildly tender proximal weakness building over weeks with raised CK and normal sensation.",
+ st:["CK, ESR, myositis antibody panel, TSH. Check swallow and respiratory muscles.","EMG and MRI of muscle, then muscle biopsy. Screen for malignancy in dermatomyositis.","Prednisolone 1 mg/kg/day with methotrexate or azathioprine; IVIg for refractory disease."]},
+{n:"Rhabdomyolysis or toxic myopathy",lv:MU,r:"c",u:1,ag:[],f:"bCKHigh:6 moMyalgia:4 hMyotoxic:3 hAlcohol:2 hTrauma:1 pProx:2 pQuad:1 hDays:2 hHours:1 sNone:1 sLevel:-3 rHyper:-3",
+ why:"Pain, weakness and dark urine after exertion, crush, seizure, alcohol or statins, with markedly raised CK.",
+ st:["CK, K⁺, creatinine, calcium, ECG and urine myoglobin. Treat hyperkalaemia immediately.","IV saline 1 to 2 L/h, aiming for urine 200 to 300 mL/h. Check compartments.","Stop the offending drug (statin, colchicine) and treat the trigger. Renal replacement for refractory AKI."]},
+{n:"Inclusion body myositis or chronic myopathy (incl. head drop)",lv:MU,r:"r",u:0,ag:[[50,120,1]],f:"hYears:3 pProx:2 pDist:1 cNeck:3 moWaste:2 sNone:2 bCKHigh:1 cDysphagia:1 gProxRise:2 hWeeks:1 hSudden:-3 sGlove:-2",
+ why:"Slowly progressive wasting of quadriceps, finger flexors or neck extensors without sensory loss.",
+ st:["CK, EMG with paraspinal sampling, MRI muscle.","Muscle biopsy for the pattern (rimmed vacuoles in IBM).","Swallow assessment, physiotherapy, falls and neck support; IVIg is of limited benefit in IBM."]},
+{n:"Acute spinal cord compression (metastasis, abscess, disc, TB)",lv:CO,r:"c",u:1,ag:[[0,30,-1],[50,120,1]],f:"pPara:4 pQuad:3 tUMN:2 tUnsure:1 sLevel:5 aRetention:4 aIncont:2 hBackPain:3 hNeckPain:2 hCancer:3 hTBHIV:2 hFever:1 hTrauma:2 hDays:2 hWeeks:2 hHours:1 rHyper:1 rBabinski:2 rAbdAbs:1 bMRICord:5 sBand:2 sPressure:.5 mDrowsy:-1 cFaceBilat:-2 cOphth:-3 mAphasia:-3 cDysphagia:-1",
+ why:"Leg weakness with a sensory level, back or neck pain and bladder involvement. Cancer, fever or trauma raise the risk.",
+ st:["Keep flat and immobilise if trauma. Examine for a sensory level, bladder scan and anal tone.","Emergency MRI of the whole spine within hours. Dexamethasone 10 mg IV then 4 mg every 6 h for malignant compression.","Neurosurgery and oncology now. If epidural abscess is possible: blood cultures, then IV antibiotics with MRI-guided drainage."]},
+{n:"Spinal cord infarction (anterior spinal artery)",lv:CO,r:"r",u:1,ag:[[40,120,1]],f:"hSudden:4 pPara:3 pQuad:1 sDissoc:3 sCrude:1 sPC:-2 aRetention:3 hBackPain:2 hVasc:1 hHTN:1 sLevel:3 tUnsure:1 tUMN:1 hDays:-1 hYears:-3",
+ why:"Sudden back pain then paraparesis with loss of pain and temperature but preserved vibration and position, below a level.",
+ st:["MRI spine with diffusion to exclude compression, and look for aortic pathology (dissection, recent aortic surgery).","Maintain MAP above 85 mmHg, avoid hypotension, consider CSF drainage if post-aortic surgery.","Antiplatelet and risk-factor management; steroids are not routine."]},
+{n:"Acute transverse myelitis (inflammatory, NMOSD, MOG)",lv:CO,r:"u",u:0,ag:[[0,12,-1],[18,50,2],[65,120,-2]],f:"pPara:3 pQuad:2 sLevel:4 aRetention:3 tUMN:1 tUnsure:1 hInfection:2 hDays:3 hWeeks:2 hEpisodic:3 sPara:2 sLhermitte:3 cVision:3 hVaccine:1 bMRICord:2 hBackPain:1 hFever:.5 hSudden:-2 hYears:-3 bCTHypo:-1",
+ why:"Subacute paraparesis with a sensory level and bladder dysfunction, with prior optic neuritis or a recent viral illness.",
+ st:["MRI brain and whole spine with contrast to exclude compression and define the lesion.","LP (cells, oligoclonal bands), AQP4 and MOG antibodies, B12, HIV, syphilis.","IV methylprednisolone 1 g daily for 3 to 5 days; plasma exchange if poor response. Neurology for NMOSD or MS."]},
+{n:"Subacute combined degeneration (B12 deficiency)",lv:CO,r:"u",u:0,ag:[],f:"sPC:4 gSensory:3 gRomberg:3 tMixed:3 hB12:4 hYears:2 hWeeks:2 sGlove:2 pDist:2 pPara:2 pQuad:1 mConf:1 rHypo:1 rAnkleAbsOnly:1 rBabinski:1 sLevel:-1 hSudden:-3 hHours:-3",
+ why:"Numb feet, sensory ataxia and positive Romberg with mixed upper and lower motor signs in a vegan or nitrous oxide user.",
+ st:["B12, homocysteine or MMA, FBC and smear. Treat before waiting for the result if suspicion is high.","MRI cervical and thoracic spine (T2 posterior column signal).","IM hydroxocobalamin 1 mg alternate days then monthly, before giving folate. Stop nitrous oxide."]},
+{n:"Brown-Séquard (cord hemisection)",lv:CO,r:"u",u:1,ag:[],f:"sBrown:6 pLegMono:2 pHemiSpare:1 tUMN:2 sDissoc:3 sPC:2 sLevel:3 hTrauma:3 hBackPain:1 hDays:1 hHours:1 hSudden:1 cFaceUMN:-2",
+ why:"Same-side weakness and vibration loss with opposite-side pain and temperature loss below a level.",
+ st:["Immobilise the spine and image: MRI, or CT if trauma and MRI not available.","Find the cause: penetrating trauma, disc, tumour, TB, MS.","Neurosurgery review; steroids only for specific indications."]},
+{n:"Cervical spondylotic myelopathy",lv:CO,r:"c",u:0,ag:[[0,40,-2],[50,120,1]],f:"pQuad:3 pArmMono:1 pPara:1 tMixed:3 tUMN:1 rMixedArmLeg:4 rHoffmann:3 rInverted:2 gSpastic:3 gMagnetic:1 hYears:3 hWeeks:2 hNeckPain:1 sGlove:1 aIncont:1 rHyper:1 rBabinski:2 hSudden:-2 cFaceUMN:-1 mDrowsy:-2",
+ why:"Clumsy numb hands and a spastic gait with LMN signs at the level of the lesion and UMN signs below.",
+ st:["MRI cervical spine. Avoid neck hyperextension; no manipulation.","Neurosurgical or spine referral, urgent if progressive deficit or sphincter loss.","After trauma with central cord syndrome, maintain MAP above 85 mmHg and consider early decompression."]},
+{n:"Cauda equina syndrome",lv:RT,r:"u",u:1,ag:[[0,25,-1]],f:"pPara:3 pLegMono:1 tLMN:3 sSaddle:5 aRetention:4 aBowel:3 aIncont:1 hBackPain:3 hLifting:2 rAbsent:1 rAnkleAbsOnly:2 rAnalAbs:3 sDermatomal:2 sPain:2 gSteppage:1 bMRICord:4 hDays:2 hHours:1 rHyper:-3 rBabinski:-3 cFaceBilat:-3 sLevel:-1",
+ why:"Back and radicular pain with saddle numbness, retention or loss of anal tone and flaccid leg weakness.",
+ st:["Bladder scan (post-void residual above 200 mL), perianal sensation and anal tone.","Emergency MRI lumbosacral spine within hours.","Urgent neurosurgical decompression. Steroids if tumour. Catheterise only as needed and document baseline."]},
+{n:"Conus medullaris syndrome",lv:RT,r:"r",u:1,ag:[],f:"aRetention:3 sSaddle:4 rAnalAbs:3 tMixed:3 hBackPain:2 pPara:2 aBowel:2 rAnkleAbsOnly:1 rBabinski:1 bMRICord:3 hDays:1 hHours:1",
+ why:"Early sphincter loss and saddle anaesthesia with symmetric mild weakness and mixed signs at T12 to L1.",
+ st:["MRI whole spine urgently, including the conus.","Same pathway as cauda equina: neurosurgery and exclusion of tumour, infarct, abscess.","Steroids if tumour or inflammatory cause."]},
+{n:"Lumbar radiculopathy (L5 or S1 disc)",lv:RT,r:"c",u:0,ag:[[20,60,1]],f:"pLegMono:3 pFocal:4 tLMN:2 sDermatomal:4 sPain:4 hLifting:3 hBackPain:3 gSteppage:2 gHeelFail:2 gToeFail:2 rAnkleAbsOnly:3 gAntalgic:1 hDays:1 hWeeks:1 hHours:1 rBabinski:-3 aRetention:-2 sLevel:-2 sSaddle:-3",
+ why:"Unilateral leg pain in a dermatome with matching myotomal weakness (L5 foot drop and big-toe extension, S1 plantarflexion and absent ankle jerk).",
+ st:["Screen for red flags first: saddle numbness, retention, bilateral signs, fever, cancer. Check straight-leg raise.","Differentiate from peroneal neuropathy: L5 weakens inversion and hip abduction as well.","Analgesia, early mobilisation, MRI if progressive or persistent beyond 6 weeks. Urgent if red flags appear."]},
+{n:"Cervical radiculopathy",lv:RT,r:"c",u:0,ag:[[25,70,1]],f:"pArmMono:3 pFocal:3 tLMN:2 sDermatomal:3 sPain:4 hNeckPain:3 sPara:1 rHypo:1 hDays:2 hWeeks:1 rHyper:-2 rBabinski:-2",
+ why:"Neck-to-arm pain with dermatomal paraesthesia and weakness in one myotome (C5 deltoid, C6 biceps, C7 triceps, C8 grip).",
+ st:["Check for myelopathic signs (Hoffmann, brisk legs) which change urgency.","Analgesia, collar for comfort, physiotherapy; avoid manipulation.","MRI cervical spine for progressive weakness or myelopathic features."]},
+{n:"Compressive mononeuropathy (peroneal, radial, ulnar, median)",lv:NV,r:"c",u:0,ag:[],f:"pFocal:4 pLegMono:1 pArmMono:1 tLMN:3 sNerve:4 gSteppage:3 hAlcohol:1 hDM:1 hTrauma:1 hDays:1 hHours:2 moWaste:1 rHyper:-3 sDermatomal:-1 rBabinski:-3 aRetention:-2",
+ why:"Isolated foot drop or wrist drop with sensory loss in one nerve territory, often after sustained pressure, trauma or alcohol.",
+ st:["Map the nerve by exam: peroneal spares inversion and hip abduction; radial spares the triceps in wrist drop at the spiral groove.","Remove the cause of compression; splint (wrist) or AFO (foot). Check compartments if limb pressure or crush.","NCS at 2 to 3 weeks. Surgical exploration if traumatic, penetrating or no recovery."]},
+{n:"Diabetic or toxic polyneuropathy",lv:NV,r:"c",u:0,ag:[[45,120,1]],f:"pDist:4 tLMN:2 sGlove:5 rHypo:2 rAbsent:1 rAnkleAbsOnly:2 hDM:3 hAlcohol:2 hYears:3 hWeeks:1 gSensory:2 gSteppage:2 sPain:1 sPressure:1 aOrtho:1 hSudden:-3 sLevel:-3 rHyper:-3",
+ why:"Slowly progressive distal sensory loss in a stocking pattern with absent ankle jerks.",
+ st:["Glucose, HbA1c, B12, TSH, renal and liver function, SPEP.","NCS to define axonal vs demyelinating; review neurotoxic drugs (isoniazid, metronidazole, chemotherapy).","Foot care, neuropathic pain treatment, glycaemic and alcohol control."]},
+{n:"CIDP",lv:NV,r:"r",u:0,ag:[],f:"pQuad:2 pProx:2 pDist:2 tLMN:2 rAbsent:3 hWeeks:3 hYears:2 hRecurrent:2 sGlove:2 bLPProt:3 hSudden:-3 hHours:-3 rHyper:-3",
+ why:"GBS-like picture that progresses beyond 8 weeks or relapses.",
+ st:["NCS and LP (high protein), MRI plexus or roots if needed.","Treat: IVIg, steroids, or plasma exchange.","Neurology follow-up; screen for paraprotein and diabetes."]},
+{n:"Vasculitic mononeuritis multiplex",lv:NV,r:"r",u:0,ag:[[40,120,1]],f:"pFocal:2 sNerve:3 tLMN:2 hFever:1 hDM:1 hRheum:3 hWeeks:2 hDays:2 sPain:3 hSudden:1 rHyper:-3",
+ why:"Painful asymmetric multifocal neuropathy with systemic features.",
+ st:["ESR, CRP, ANCA, ANA, cryoglobulins, hepatitis B and C, HIV, glucose.","NCS and nerve and muscle biopsy.","High-dose steroids with cyclophosphamide for systemic vasculitis."]},
+{n:"Brachial plexopathy or neuralgic amyotrophy",lv:NV,r:"r",u:0,ag:[],f:"pArmMono:3 sPain:4 tLMN:2 hInfection:1 hVaccine:2 moWaste:1 hCancer:1 cHorner:2 hDays:2 hWeeks:1 rBabinski:-3",
+ why:"Severe shoulder pain followed by patchy arm weakness and wasting.",
+ st:["Chest X-ray and MRI plexus; look for Pancoast tumour if Horner's, trauma or cancer.","EMG after 2 to 3 weeks.","Analgesia, early steroids for neuralgic amyotrophy, physiotherapy."]},
+{n:"Bell's palsy",lv:NV,r:"c",u:0,ag:[],f:"pFace:6 cFaceLMN:6 tLMN:1 hHours:1 hDays:2 hInfection:1 sNone:2 mNormal:2 cFaceUMN:-5 cOphth:-2 mAphasia:-3 rHyper:-3 cDysphagia:-2 pHemiFace:-3",
+ why:"Isolated facial weakness including the forehead, developing over 1 to 3 days, with no other neurological findings.",
+ st:["Confirm LMN pattern (forehead involved) and exclude stroke, Lyme, HIV, parotid mass and ear vesicles (Ramsay Hunt).","Prednisolone 50 to 60 mg daily for 10 days within 72 hours of onset; add valaciclovir if severe or vesicles.","Eye protection: lubricant and night taping. Review if no recovery by 3 to 4 months, or if bilateral or recurrent."]},
+{n:"Motor neuron disease (ALS)",lv:MN,r:"u",u:0,ag:[[0,30,-2],[45,120,1]],f:"tMixed:5 moFasc:4 moWaste:3 cTongueWaste:4 cDysphagia:2 cDysarthria:2 sNone:5 mNormal:1 pBulbar:1 pArmMono:2 pQuad:2 cNeck:2 hYears:2 hWeeks:2 rHyper:1 rBabinski:1 rJawBrisk:2 cCough:1 sGlove:-4 sLevel:-4 aRetention:-3 cOphth:-3 hSudden:-4 cPtosisFat:-3",
+ why:"Painless asymmetric wasting and fasciculations with brisk reflexes and bulbar signs, and no sensory loss.",
+ st:["Exclude mimics: MRI brain and cervical spine, B12, TSH, K⁺, CK, HIV, Lyme, paraprotein.","EMG and NCS (El Escorial or Awaji criteria). Check FVC and swallow.","Riluzole, multidisciplinary care, early NIV and PEG discussion, and palliative input."]},
+{n:"Multiple sclerosis relapse or optic-spinal demyelination",lv:S,r:"u",u:0,ag:[[0,12,-2],[18,45,2],[60,120,-2]],f:"hEpisodic:3 cVision:3 cINO:4 sPara:2 sLhermitte:3 hDays:2 hWeeks:2 tUMN:1 cbDysmetria:1 cbNyst:1 aRetention:1 pHemiSpare:1 pPara:1 sLevel:1 hFever:-1 hSudden:-2 hYears:-2",
+ why:"Young adult with relapsing episodes: optic neuritis, INO, sensory symptoms and cord signs.",
+ st:["MRI brain and spine with contrast.","IV methylprednisolone 1 g daily for 3 to 5 days after excluding infection.","LP for oligoclonal bands, AQP4 and MOG antibodies, and neurology referral for disease-modifying therapy."]},
+{n:"Brain tumour or abscess",lv:S,r:"c",u:1,ag:[],f:"hWeeks:3 hHeadache:3 mSeizure:2 pHemiFace:2 pHemiSpare:2 pFaceArm:1 tUMN:1 mFrontal:2 hCancer:3 hFever:2 hTBHIV:2 mConf:1 hYears:1 hDays:1 hSudden:-2",
+ why:"Progressive focal deficit over weeks with headache, seizures, cancer or immunosuppression.",
+ st:["CT with contrast then MRI. Blood cultures and CRP if abscess is possible.","Dexamethasone 8 to 10 mg IV for oedema (hold if lymphoma is suspected). Anti-seizure drug if seizures.","Neurosurgery for biopsy or drainage; abscess: IV ceftriaxone with metronidazole and local advice."]},
+{n:"Meningitis or encephalitis",lv:DF,r:"u",u:1,ag:[],f:"hFever:4 hHeadache:2 mConf:3 mDrowsy:2 mSeizure:2 hNeckPain:1 pHemiFace:1 pHemiSpare:1 hDays:2 hHours:2 hTBHIV:1 bGlucoseLow:-2",
+ why:"Fever with headache, confusion or seizures and focal signs.",
+ st:["Do not delay treatment: blood cultures, then IV ceftriaxone 2 g with dexamethasone, and aciclovir 10 mg/kg for encephalitis.","CT before LP if focal signs or reduced GCS. LP: cells, protein, glucose, PCR, India ink or TB as relevant.","Isolation per organism, seizure control, ICU if GCS falls."]},
+{n:"Hemiplegic migraine",lv:S,r:"r",u:0,ag:[[0,45,2],[60,120,-2]],f:"hMigraine:5 hRecurrent:3 hFam:1 pHemiFace:2 pHemiSpare:2 sPara:2 mAphasia:1 hHeadache:2 hHours:1 hSudden:-1 hYears:-2",
+ why:"Recurrent attacks of unilateral weakness with migraine aura, fully reversible. A diagnosis of exclusion.",
+ st:["Treat as stroke until proven otherwise: glucose, CT or MRI with MRA.","Avoid triptans and ergots. Analgesia and antiemetic.","Prophylaxis and genetic referral if familial; follow up with neurology."]},
+{n:"Carotid or vertebral artery dissection",lv:S,r:"r",u:1,ag:[[0,50,1]],f:"cHorner:3 hNeckPain:3 hNeckManip:4 hSudden:2 hHours:2 pHemiFace:2 pCrossed:1 mAphasia:1 hHeadache:2 cVert:1 hTrauma:1 sCrossedFace:1",
+ why:"Neck pain, Horner's and a stroke-like syndrome after neck strain or manipulation.",
+ st:["CT or MR angiogram of head and neck now.","Lysis is still allowed when within window and no other contraindication.","Antiplatelet or anticoagulation per neurology; stop neck manipulation and avoid trauma."]},
+{n:"Hypertensive encephalopathy or PRES",lv:DF,r:"r",u:1,ag:[],f:"mConf:3 hHTN:4 mSeizure:3 mField:3 hHeadache:3 mDrowsy:1 hPregnant:2 hDays:1 hHours:1 pHemiFace:.5",
+ why:"Severe hypertension with headache, visual loss, confusion and seizures.",
+ st:["Controlled BP reduction (about 25% in the first hour) with IV labetalol or nicardipine. Treat seizures.","MRI brain: posterior vasogenic oedema.","Find the trigger: pre-eclampsia (magnesium), renal failure, immunosuppressants."]},
+{n:"Functional (conversion) weakness",lv:SY,r:"u",u:0,ag:[[0,50,1]],f:"oFunctional:6 mNormal:1 pHemiSpare:1 pLegMono:1 pArmMono:1 sHemi:1 hPsych:3 hSudden:1 hDays:1 rHyper:-3 rBabinski:-4 cFaceUMN:-2 moFasc:-2",
+ why:"Weakness with positive internal inconsistencies (Hoover sign, give-way, drift without pronation) and normal reflexes.",
+ st:["Use positive signs; exclude structural mimics with MRI when anything atypical appears.","Explain the diagnosis clearly and avoid saying 'nothing is wrong'.","Refer for physiotherapy and neuropsychiatry."]},
+{n:"Acute flaccid myelitis or poliomyelitis",lv:MN,r:"r",u:1,ag:[[0,15,3],[40,120,-2]],f:"pQuad:2 pLegMono:2 pArmMono:2 tLMN:3 hFever:3 hInfection:2 sNone:3 hDays:2 hHours:1 mNormal:1 rAbsent:1 sLevel:-3 rHyper:-3",
+ why:"Asymmetric flaccid weakness after a febrile illness in a child, with normal sensation.",
+ st:["Secure airway and ventilation; this can progress to bulbar and respiratory failure.","MRI spine (anterior horn T2 hyperintensity), CSF, stool and respiratory virology.","Notify as AFP surveillance, supportive care, physiotherapy."]},
+{n:"Syringomyelia",lv:CO,r:"r",u:0,ag:[[10,50,1]],f:"sDissoc:5 pArmMono:1 pQuad:1 tMixed:2 hYears:3 moWaste:2 rHypo:1 gSpastic:1 sPain:1 hWeeks:1 hSudden:-2",
+ why:"Cape-like loss of pain and temperature with wasted hands and spastic legs, slowly progressive.",
+ st:["MRI whole spine and craniocervical junction.","Look for Chiari, tumour or post-traumatic cause.","Neurosurgery for decompression; protect insensate skin."]},
+{n:"Wernicke's encephalopathy",lv:DF,r:"u",u:1,ag:[],f:"mConf:3 cOphth:3 gAtaxic:3 hAlcohol:4 cbNyst:3 hDays:1 hWeeks:1 pNone:2",
+ why:"Confusion, ophthalmoplegia and ataxia in a malnourished or alcoholic patient.",
+ st:["IV thiamine 500 mg 3 times daily for 2 to 3 days before or with glucose.","Magnesium, electrolytes, glucose and a full nutritional work-up.","Then 250 mg daily for 3 to 5 days, thiamine long-term, and alcohol withdrawal management."]},
+{n:"Alcoholic or degenerative cerebellar ataxia",lv:CB,r:"u",u:0,ag:[[35,120,1]],f:"cbTruncal:3 gAtaxic:3 hAlcohol:3 hYears:3 hWeeks:1 cbScanning:2 cbDysdiad:2 cbDysmetria:2 cbNyst:1 gTandem:2 pNone:3 hSudden:-3",
+ why:"Slowly progressive gait ataxia with scanning speech, usually in a heavy drinker or a family member of an ataxic patient.",
+ st:["MRI brain, B12, thiamine, vitamin E, TSH, anti-GAD and paraneoplastic antibodies.","Stop alcohol, give thiamine, review drugs (phenytoin, lithium).","Genetic referral if family history; physiotherapy and falls prevention."]},
+{n:"Parkinsonism",lv:DF,r:"c",u:0,ag:[[55,120,2],[0,40,-2]],f:"moRigid:4 moTremor:3 gParkinson:4 gFreezing:2 hYears:3 hWeeks:1 pNone:3 mMemory:.5 cDysarthria:.5 hSudden:-3",
+ why:"Rigidity, resting tremor and a shuffling gait with no true weakness.",
+ st:["Look for drug-induced or vascular causes; stop dopamine blockers.","Atypical features (early falls, autonomic failure, antecollis) point to MSA or PSP.","Levodopa trial and neurology referral."]},
+{n:"Normal pressure hydrocephalus",lv:DF,r:"r",u:0,ag:[[60,120,2],[0,50,-2]],f:"gMagnetic:5 aIncont:3 mMemory:3 mFrontal:2 hYears:2 hWeeks:1 pNone:3 gSpastic:1",
+ why:"Magnetic gait, urinary incontinence and cognitive slowing in an older patient.",
+ st:["CT or MRI: ventriculomegaly out of proportion to atrophy.","High-volume LP tap test with gait assessment before and after.","Neurosurgery for shunt if gait improves."]}
+];
+D.forEach(d=>{d.w={};d.f.split(" ").forEach(t=>{const i=t.lastIndexOf(":");d.w[t.slice(0,i)]=parseFloat(t.slice(i+1))});
+  d.pos=Object.entries(d.w).filter(e=>e[1]>0).map(e=>e[0]);});
+
+/* ---------- State ---------- */
+const on=new Set(); const notes=[];
+let age=32;
+const EX={
+ "Low K⁺, head drop":{age:32,on:["pProx","tLMN","hDays","mNormal","cNeck","sNone","rHypo","hVomDiarr","hCarbLoad","bKLow","bECGU","gProxRise","gUnable"],name:"head drop with hypokalaemia"},
+ "Ascending weakness":{age:41,on:["pAscend","tLMN","hDays","hInfection","rAbsent","sPara","cFaceBilat","mNormal","aOrtho","bFVCLow","gUnable"]},
+ "Right MCA stroke":{age:68,on:["pHemiFace","tUMN","hSudden","mAphasia","mGaze","mField","hAF","hHTN","cFaceUMN","rBabinski"]},
+ "Paraparesis, retention":{age:58,on:["pPara","tUMN","hDays","sLevel","aRetention","hBackPain","hCancer","rBabinski","rHyper","gSpastic"]},
+ "Evening ptosis":{age:29,on:["pBulbar","cPtosisFat","cOphth","hFluct","moFatig","cDysphagia","cNeck","sNone","mNormal","hWeeks"]}
+};
+
+/* ---------- Scoring ---------- */
+function ageDelta(d,a){let s=0;(d.ag||[]).forEach(r=>{if(a>=r[0]&&a<=r[1])s+=r[2]});return s}
+function selOf(list){return list.find(x=>on.has(x))}
+function score(d){
+  let raw=0;const m=[],x=[];
+  for(const id in d.w){if(on.has(id)){raw+=d.w[id];(d.w[id]>0?m:x).push(id)}}
+  const grp=[[PAT,"pattern"],[TYP,"type"],[ONSET,"onset"]];
+  const tChoice=selOf(TYP);
+  for(const [list,name] of grp){
+    const sel=selOf(list); if(!sel)continue;
+    if(name==="type"&&sel==="tUnsure")continue;
+    const ps=d.pos.filter(p=>list.includes(p)); if(ps.length&&!ps.includes(sel)){raw-=2;x.push("!"+name)}
+  }
+  raw+=ageDelta(d,age);
+  return {d,raw,m,x};
+}
+function run(){
+  if(on.size===0)return null;
+  const all=D.map(score).filter(r=>r.raw>0).sort((a,b)=>b.raw-a.raw);
+  return all;
+}
+function levelBars(all){
+  const best={};LEVELS.forEach(l=>best[l]=0);
+  all.forEach(r=>{best[r.d.lv]=Math.max(best[r.d.lv],r.raw)});
+  const top=all[0]?all[0].raw:1;
+  return LEVELS.map(l=>({l,v:best[l],p:Math.max(0,best[l]/top)})).sort((a,b)=>b.v-a.v).filter(b=>b.v>0).slice(0,6);
+}
+function flags(){
+  const f=[];
+  if(on.has("cCough")||on.has("bFVCLow")||(on.has("cDysphagia")&&(on.has("cDysarthria")||on.has("cPtosis")||on.has("cPtosisFat")))||on.has("mDrowsy"))f.push("Airway first: check FVC, NIF, cough and swallow; apply the 20-30-40 rule.");
+  if(on.has("bGlucoseLow"))f.push("Treat hypoglycaemia now, then reassess the deficit.");
+  if(on.has("bKLow")||on.has("bECGU"))f.push("Cardiac monitor and ECG. Replace K⁺ and Mg²⁺ safely.");
+  if(on.has("hSudden")&&(["pHemiFace","pHemiSpare","pFaceArm","pCrossed","pLegMono","pArmMono"].includes(selOf(PAT))||on.has("mAphasia")))f.push("Stroke clock: record last-known-well, glucose and CT now.");
+  if(on.has("sLevel")||on.has("sSaddle")||on.has("aRetention")||on.has("bMRICord"))f.push("Cord or cauda equina pattern: urgent MRI and bladder scan.");
+  if(on.has("hFood")||on.has("hSnake")||on.has("hOP")||on.has("hTick"))f.push("Toxic exposure: treat on clinical grounds, do not wait for tests.");
+  return f;
+}
+const pillRar={c:"common",u:"uncommon",r:"rare"};
+
+/* ---------- Render ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function buildInputs(){
+  const host=document.getElementById("inputs");host.innerHTML="";
+  G.forEach(g=>{
+    const det=document.createElement("details");det.className="grp";det.id="g-"+g.k;if(g.open)det.open=true;
+    det.innerHTML='<summary>'+esc(g.t)+(g.s?'<span class="sub">'+esc(g.s)+'</span>':'')+'<span class="cnt" id="c-'+g.k+'"></span></summary><div class="chips" id="ch-'+g.k+'"></div>';
+    host.appendChild(det);
+    const box=det.querySelector(".chips");
+    g.items.forEach(([id,lab])=>{
+      const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.id=id;b.id="f-"+id;b.textContent=lab;b.setAttribute("aria-pressed","false");
+      b.addEventListener("click",()=>toggle(g,id));box.appendChild(b);
+    });
+  });
+  const det=document.createElement("details");det.className="grp";det.open=true;det.id="g-other";
+  det.innerHTML='<summary>Add other findings<span class="sub">type a finding; matches tick, others are noted</span></summary><div class="addrow"><input id="custom" list="flist" placeholder="e.g. Hoffmann positive, snake bite, ptosis" aria-label="Add another finding"><button class="btn pri" id="addbtn" type="button">Add</button></div><div class="chips" id="notes"></div><datalist id="flist">'+Object.values(L).map(l=>'<option value="'+esc(l)+'">').join("")+'</datalist><div class="note">Noted items that do not match a listed finding are shown in the summary but not scored.</div>';
+  host.appendChild(det);
+  document.getElementById("addbtn").onclick=addCustom;
+  document.getElementById("custom").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addCustom()}});
+}
+function toggle(g,id){
+  if(on.has(id)){on.delete(id)}
+  else{
+    if(g.single)SING[g.k].forEach(x=>on.delete(x));
+    if(g.none){if(id===g.none)g.items.forEach(i=>on.delete(i[0]));else on.delete(g.none)}
+    on.add(id);
+  }
+  hideBanner();sync();
+}
+function addCustom(){
+  const inp=document.getElementById("custom");const v=inp.value.trim();if(!v)return;
+  const hit=Object.entries(L).find(([id,l])=>l.toLowerCase()===v.toLowerCase())||Object.entries(L).find(([id,l])=>l.toLowerCase().includes(v.toLowerCase()));
+  if(hit){const g=G.find(g=>g.items.some(i=>i[0]===hit[0]));if(!on.has(hit[0]))toggle(g,hit[0])}
+  else{notes.push(v);}
+  inp.value="";hideBanner();sync();
+}
+function hideBanner(){document.getElementById("banner").hidden=true}
+function sync(){
+  document.querySelectorAll(".chip[data-id]").forEach(b=>b.setAttribute("aria-pressed",on.has(b.dataset.id)?"true":"false"));
+  G.forEach(g=>{const n=g.items.filter(i=>on.has(i[0])).length;document.getElementById("c-"+g.k).textContent=n?n:""});
+  const nb=document.getElementById("notes");nb.innerHTML="";
+  notes.forEach((t,i)=>{const b=document.createElement("button");b.type="button";b.className="chip";b.setAttribute("aria-pressed","true");b.title="Remove";b.textContent=t+"  ×";b.onclick=()=>{notes.splice(i,1);sync()};nb.appendChild(b)});
+  document.getElementById("mobcount").textContent=on.size+(on.size===1?" finding":" findings");
+  renderResult();
+}
+function dxCard(r,i,first,compact){
+  const d=r.d;
+  const mt=r.m.slice(0,8).map(id=>'<span>'+esc(L[id])+'</span>').join("")+r.x.slice(0,4).map(id=>'<span class="x">'+(id[0]==="!"?"Doesn’t fit "+id.slice(1):esc(L[id]))+'</span>').join("");
+  return '<div class="dx'+(first?' first':'')+'"><div class="dxh"><div class="rank">'+i+'</div><div style="min-width:0"><div class="dxn">'+esc(d.n)+'</div><div class="meta">'
+   +(first?'<span class="pill s">Most likely</span>':'')+(d.u?'<span class="pill u">Time-critical</span>':'')+'<span class="pill">'+esc(pillRar[d.r])+'</span><span class="pill">'+esc(d.lv)+'</span></div></div></div>'
+   +(compact?'':'<p class="why">'+esc(d.why)+'</p>')+'<div class="mt">'+mt+'</div>'
+   +'<div class="first-move"><b>First move:</b> '+esc(d.st[0])+'</div></div>';
+}
+function renderResult(){
+  const el=document.getElementById("results");
+  const all=run();
+  if(!all||all.length===0){el.innerHTML='<div class="card"><h2>Result</h2><p class="empty">Tick the findings from the examination to see the likely site, differentials and next steps.</p></div>';return}
+  const top3=all.slice(0,3), topIds=new Set(top3.map(r=>r.d.n));
+  let rare=all.filter(r=>!topIds.has(r.d.n)&&r.d.r==="r"&&r.raw>=3);
+  if(rare.length<3){const more=all.filter(r=>!topIds.has(r.d.n)&&r.d.r==="u"&&r.raw>=3&&!rare.includes(r));rare=rare.concat(more)}
+  rare=rare.slice(0,3);
+  const lead=top3[0], bars=levelBars(all);
+  const typ=selOf(TYP), pat=selOf(PAT);
+  const fl=flags();
+  const typTxt={tUMN:"UMN pattern",tLMN:"LMN pattern",tMixed:"Mixed UMN + LMN",tUnsure:"Acute flaccid"}[typ]||"";
+  let h='';
+  h+='<div class="card"><h2>Likely site</h2><p class="site">'+esc(lead.d.lv)+'<small>'+[typTxt,pat?L[pat]:"",age?age+" y":""].filter(Boolean).map(esc).join(" · ")+'</small></p>';
+  if(fl.length)h+='<div class="flags" style="margin-top:12px">'+fl.map(f=>'<div class="flag">'+esc(f)+'</div>').join("")+'</div>';
+  h+='<div style="margin-top:12px">'+bars.map((b,i)=>'<div class="bar'+(i===0?' top':'')+'"><span class="l">'+esc(b.l)+'</span><span class="t"><i style="width:'+Math.round(b.p*100)+'%"></i></span><span class="v">'+Math.round(b.p*100)+'</span></div>').join("")+'</div>';
+  h+='<div class="small" style="margin-top:6px">Bars compare sites against the best match (100).</div></div>';
+  h+='<div class="card"><h2>Top three differentials</h2>'+top3.map((r,i)=>dxCard(r,i+1,i===0)).join("")+'</div>';
+  h+='<div class="card"><h2>Next three best steps</h2><p class="steps-for">For: '+esc(lead.d.n)+'</p><ol class="steps">'+lead.d.st.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ol></div>';
+  h+='<div class="card"><h2>Three less-common matches to keep in mind</h2>'+(rare.length?rare.map((r,i)=>dxCard(r,i+1,false,true)).join(""):'<p class="empty">No less-common condition fits the findings so far.</p>')+'</div>';
+  if(notes.length)h+='<div class="card"><h2>Other findings noted (not scored)</h2><p class="why">'+notes.map(esc).join("; ")+'</p></div>';
+  h+='<p class="small">Decision support for trained clinicians, built from standard localisation tables. It does not replace examination, imaging or specialist advice.</p>';
+  el.innerHTML=h;
+}
+function summaryText(){
+  const all=run();if(!all||!all.length)return "";
+  const top3=all.slice(0,3);const tn=new Set(top3.map(r=>r.d.n));
+  const rare=all.filter(r=>!tn.has(r.d.n)&&(r.d.r==="r"||r.d.r==="u")&&r.raw>=3).sort((a,b)=>(b.d.r==="r")-(a.d.r==="r")||b.raw-a.raw).slice(0,3);
+  const f=[...on].map(i=>L[i]);
+  return "Neuraxis summary, age "+age+"\nFindings: "+f.join("; ")+(notes.length?"; other: "+notes.join("; "):"")+"\nLikely site: "+top3[0].d.lv+"\nTop three: "+top3.map(r=>r.d.n).join(" | ")+"\nLess common: "+rare.map(r=>r.d.n).join(" | ")+"\nNext steps:\n"+top3[0].d.st.map((s,i)=>(i+1)+". "+s).join("\n");
+}
+/* ---------- Wire up ---------- */
+function load(name){
+  const e=EX[name];on.clear();notes.length=0;e.on.forEach(i=>on.add(i));age=e.age;document.getElementById("age").value=age;
+  const b=document.getElementById("banner");b.hidden=false;b.textContent="Example loaded: "+name+". Press Clear all to start a new patient.";sync();
+}
+document.getElementById("exbtns").innerHTML=Object.keys(EX).map(k=>'<button class="btn" type="button" data-ex="'+esc(k)+'">'+esc(k)+'</button>').join(" ");
+document.getElementById("exbtns").addEventListener("click",e=>{const k=e.target.dataset&&e.target.dataset.ex;if(k)load(k)});
+document.getElementById("clear").onclick=()=>{on.clear();notes.length=0;hideBanner();sync()};
+document.getElementById("age").addEventListener("input",e=>{const v=parseInt(e.target.value,10);age=isNaN(v)?0:v;renderResult()});
+document.getElementById("copy").onclick=async()=>{const t=summaryText();if(!t)return;const b=document.getElementById("copy");
+  try{await navigator.clipboard.writeText(t);b.textContent="Copied"}catch(e){const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");b.textContent="Copied"}catch(_){b.textContent="Copy failed"}ta.remove()}
+  setTimeout(()=>b.textContent="Copy summary",1500)};
+document.getElementById("theme").onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark"};
+buildInputs();load("Low K⁺, head drop");
+if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
+</script>
+
+</body>
+</html>
